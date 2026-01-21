@@ -1,0 +1,9 @@
+/vendor
+/docs
+/scripts
+/.idea
+.env
+AGENTS.md
+.phpunit.result.cache
+composer.lock
+.DS_Store
