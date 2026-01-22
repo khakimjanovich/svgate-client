@@ -1,6 +1,7 @@
 /vendor
 /docs
 /scripts
+/build/
 /.idea
 .env
 AGENTS.md

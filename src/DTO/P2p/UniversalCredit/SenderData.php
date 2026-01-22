@@ -4,47 +4,57 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\P2p\UniversalCredit;
 
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ValidationException;
+use Khakimjanovich\SVGate\Validation\Attributes\Length;
+use Khakimjanovich\SVGate\Validation\AttributeValidator;
 
-final readonly class SenderData
+final readonly class SenderData implements DTOFactory
 {
     public function __construct(
+        #[Length(min: 1, max: 32)]
         public string $id,
+        #[Length(min: 1, max: 80)]
         public string $legalName,
+        #[Length(min: 1, max: 80)]
         public string $system,
+        #[Length(min: 1, max: 50)]
         public string $lastName,
+        #[Length(min: 1, max: 50)]
         public string $firstName,
+        #[Length(min: 1, max: 50)]
         public string $middleName,
+        #[Length(min: 1, max: 12)]
         public string $refNum,
         public ?DocData $doc = null
     ) {
-        if ($this->id === '' || strlen($this->id) > 32) {
-            throw new ValidationException('Sender id must be between 1 and 32 characters.');
+        AttributeValidator::validate(self::class, get_defined_vars(), ValidationException::class);
+    }
+
+    public static function from(array $data): static
+    {
+        $required = ['id', 'legalName', 'system', 'lastName', 'firstName', 'middleName', 'refNum'];
+        foreach ($required as $field) {
+            if (! array_key_exists($field, $data)) {
+                throw new ValidationException('senderData requires '.$field.'.');
+            }
         }
 
-        if ($this->legalName === '' || strlen($this->legalName) > 80) {
-            throw new ValidationException('Sender legal name must be between 1 and 80 characters.');
+        $doc = null;
+        if (array_key_exists('doc', $data)) {
+            $doc = is_array($data['doc']) ? DocData::from($data['doc']) : $data['doc'];
         }
 
-        if ($this->system === '' || strlen($this->system) > 80) {
-            throw new ValidationException('Sender system must be between 1 and 80 characters.');
-        }
-
-        if ($this->lastName === '' || strlen($this->lastName) > 50) {
-            throw new ValidationException('Sender last name must be between 1 and 50 characters.');
-        }
-
-        if ($this->firstName === '' || strlen($this->firstName) > 50) {
-            throw new ValidationException('Sender first name must be between 1 and 50 characters.');
-        }
-
-        if ($this->middleName === '' || strlen($this->middleName) > 50) {
-            throw new ValidationException('Sender middle name must be between 1 and 50 characters.');
-        }
-
-        if ($this->refNum === '' || strlen($this->refNum) > 12) {
-            throw new ValidationException('Sender refNum must be between 1 and 12 characters.');
-        }
+        return new self(
+            (string) $data['id'],
+            (string) $data['legalName'],
+            (string) $data['system'],
+            (string) $data['lastName'],
+            (string) $data['firstName'],
+            (string) $data['middleName'],
+            (string) $data['refNum'],
+            $doc
+        );
     }
 
     public function toArray(): array

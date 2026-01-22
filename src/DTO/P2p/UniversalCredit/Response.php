@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\P2p\UniversalCredit;
 
+use Khakimjanovich\SVGate\Codes\RPCErrors;
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
 
-final readonly class Response
+final readonly class Response implements DTOFactory
 {
     public function __construct(
         public string $id,
@@ -34,12 +36,8 @@ final readonly class Response
         public string $status
     ) {}
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
+    public static function from(array $data): static
+    {
         $required = [
             'id',
             'username',
@@ -67,9 +65,11 @@ final readonly class Response
             if (! array_key_exists($field, $data)) {
                 throw new ResponseException(
                     'Missing field in p2p.universal.credit response: '.$field,
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_MISSING_FIELD
                 );
             }
         }

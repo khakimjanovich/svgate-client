@@ -9,15 +9,16 @@
     "psr/http-factory": "^1.0",
     "psr/http-message": "^2.0",
     "psr/log": "^3.0",
-      "ext-ctype": "*"
+    "ext-ctype": "*"
   },
   "require-dev": {
     "nyholm/psr7": "^1.6",
-    "phpunit/phpunit": "^11.0",
-    "laravel/pint": "^1.16"
+    "laravel/pint": "^1.16",
+    "pestphp/pest": "^3.0"
   },
   "scripts": {
-    "test": "phpunit",
+    "test": "pest",
+    "test-coverage": "php -r \"if (!is_dir('build')) { mkdir('build', 0777, true); }\" && pest --coverage --coverage-clover build/coverage.xml && php scripts/check-coverage.php build/coverage.xml 95",
     "format": "pint",
     "format:check": "pint --test"
   },
@@ -32,6 +33,11 @@
   "autoload-dev": {
     "psr-4": {
       "Khakimjanovich\\SVGate\\Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
     }
   }
 }

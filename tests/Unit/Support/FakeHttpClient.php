@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Khakimjanovich\SVGate\Tests\Support;
+namespace Khakimjanovich\SVGate\Tests\Unit\Support;
 
 use Closure;
 use InvalidArgumentException;

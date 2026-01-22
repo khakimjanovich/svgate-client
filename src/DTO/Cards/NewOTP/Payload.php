@@ -4,25 +4,48 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Cards\NewOTP;
 
+use Khakimjanovich\SVGate\DTO\Contracts\PayloadContract;
 use Khakimjanovich\SVGate\Exceptions\ValidationException;
+use Khakimjanovich\SVGate\Validation\Attributes\Digits;
+use Khakimjanovich\SVGate\Validation\Attributes\Length;
+use Khakimjanovich\SVGate\Validation\AttributeValidator;
 
-final class Payload
+final readonly class Payload implements PayloadContract
 {
     public function __construct(
-        public readonly CardData $card,
-        public readonly string $serviceName,
-        public readonly ?SmsData $sms = null,
-        public readonly ?string $requestorPhone = null
+        public CardData $card,
+        #[Length(min: 1, max: 20)]
+        public string $serviceName,
+        public ?SmsData $sms = null,
+        #[Digits(minLength: 1, maxLength: 12)]
+        public ?string $requestorPhone = null
     ) {
-        if ($this->serviceName === '' || strlen($this->serviceName) > 20) {
-            throw new ValidationException('Service name must be between 1 and 20 characters.');
+        AttributeValidator::validate(self::class, get_defined_vars(), ValidationException::class);
+    }
+
+    public static function from(array $data): static
+    {
+        if (! array_key_exists('card', $data) || ! array_key_exists('serviceName', $data)) {
+            throw new ValidationException('cards.new.otp payload requires card and serviceName.');
         }
 
-        if ($this->requestorPhone !== null) {
-            if (! ctype_digit($this->requestorPhone) || strlen($this->requestorPhone) > 12) {
-                throw new ValidationException('Requestor phone must be a numeric string up to 12 digits.');
-            }
+        $card = is_array($data['card']) ? CardData::from($data['card']) : $data['card'];
+        $sms = null;
+        if (array_key_exists('sms', $data)) {
+            $sms = is_array($data['sms']) ? SmsData::from($data['sms']) : $data['sms'];
         }
+
+        return new self(
+            $card,
+            (string) $data['serviceName'],
+            $sms,
+            $data['requestorPhone'] ?? null
+        );
+    }
+
+    public function method(): string
+    {
+        return 'cards.new.otp';
     }
 
     public function toParams(): array

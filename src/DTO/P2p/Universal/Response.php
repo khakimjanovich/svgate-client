@@ -4,44 +4,42 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\P2p\Universal;
 
+use Khakimjanovich\SVGate\Codes\RPCErrors;
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
 
-final class Response
+final readonly class Response implements DTOFactory
 {
     public function __construct(
-        public readonly string $id,
-        public readonly string $username,
-        public readonly string $refNum,
-        public readonly string $ext,
-        public readonly string $pan,
-        public readonly string $pan2,
-        public readonly string $expiry,
-        public readonly string $tranType,
-        public readonly int $transType,
-        public readonly string $date7,
-        public readonly string $date12,
-        public readonly int $amount,
-        public readonly string $currency,
-        public readonly string $stan,
-        public readonly string $field38,
-        public readonly ?string $field48,
-        public readonly ?string $field91,
-        public readonly string $merchantId,
-        public readonly string $terminalId,
-        public readonly int $resp,
-        public readonly ?string $respText,
-        public readonly string $respSV,
-        public readonly string $status,
-        public readonly string $refNumDebit,
-        public readonly string $refNumCredit
+        public string $id,
+        public string $username,
+        public string $refNum,
+        public string $ext,
+        public string $pan,
+        public string $pan2,
+        public string $expiry,
+        public string $tranType,
+        public int $transType,
+        public string $date7,
+        public string $date12,
+        public int $amount,
+        public string $currency,
+        public string $stan,
+        public string $field38,
+        public ?string $field48,
+        public ?string $field91,
+        public string $merchantId,
+        public string $terminalId,
+        public int $resp,
+        public ?string $respText,
+        public string $respSV,
+        public string $status,
+        public string $refNumDebit,
+        public string $refNumCredit
     ) {}
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
+    public static function from(array $data): static
+    {
         $required = [
             'id',
             'username',
@@ -71,9 +69,11 @@ final class Response
             if (! array_key_exists($field, $data)) {
                 throw new ResponseException(
                     'Missing field in p2p.universal response: '.$field,
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_MISSING_FIELD
                 );
             }
         }

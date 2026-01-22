@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Trans\PayPurpose;
 
+use Khakimjanovich\SVGate\Codes\RPCErrors;
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
 
-final class Response
+final readonly class Response implements DTOFactory
 {
     public function __construct(
         public readonly string $id,
@@ -28,12 +30,8 @@ final class Response
         public readonly string $status
     ) {}
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
+    public static function from(array $data): static
+    {
         $required = [
             'id',
             'username',
@@ -57,9 +55,11 @@ final class Response
             if (! array_key_exists($field, $data)) {
                 throw new ResponseException(
                     'Missing field in trans.pay.purpose response: '.$field,
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_MISSING_FIELD
                 );
             }
         }

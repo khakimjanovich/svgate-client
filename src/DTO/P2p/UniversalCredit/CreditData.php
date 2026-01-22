@@ -4,37 +4,53 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\P2p\UniversalCredit;
 
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ValidationException;
+use Khakimjanovich\SVGate\Validation\Attributes\Length;
+use Khakimjanovich\SVGate\Validation\Attributes\PositiveInt;
+use Khakimjanovich\SVGate\Validation\AttributeValidator;
+use ReflectionException;
 
-final readonly class CreditData
+final readonly class CreditData implements DTOFactory
 {
+    /**
+     * @throws ReflectionException
+     */
     public function __construct(
+        #[PositiveInt]
         public int $amount,
+        #[Length(min: 1, max: 75)]
         public string $ext,
+        #[Length(min: 1, max: 16)]
         public string $merchantId,
+        #[Length(min: 1, max: 16)]
         public string $terminalId,
+        #[Length(min: 1, max: 32)]
         public string $recipient,
         public SenderData $sender
     ) {
-        if ($this->amount <= 0) {
-            throw new ValidationException('Amount must be a positive integer.');
+        AttributeValidator::validate(self::class, get_defined_vars(), ValidationException::class);
+    }
+
+    public static function from(array $data): static
+    {
+        $required = ['amount', 'ext', 'merchantId', 'terminalId', 'recipient', 'sender'];
+        foreach ($required as $field) {
+            if (! array_key_exists($field, $data)) {
+                throw new ValidationException('creditData requires '.$field.'.');
+            }
         }
 
-        if ($this->ext === '' || strlen($this->ext) > 75) {
-            throw new ValidationException('Ext must be between 1 and 75 characters.');
-        }
+        $sender = is_array($data['sender']) ? SenderData::from($data['sender']) : $data['sender'];
 
-        if ($this->merchantId === '' || strlen($this->merchantId) > 16) {
-            throw new ValidationException('Merchant id must be between 1 and 16 characters.');
-        }
-
-        if ($this->terminalId === '' || strlen($this->terminalId) > 16) {
-            throw new ValidationException('Terminal id must be between 1 and 16 characters.');
-        }
-
-        if ($this->recipient === '' || strlen($this->recipient) > 32) {
-            throw new ValidationException('Recipient must be between 1 and 32 characters.');
-        }
+        return new self(
+            (int) $data['amount'],
+            (string) $data['ext'],
+            (string) $data['merchantId'],
+            (string) $data['terminalId'],
+            (string) $data['recipient'],
+            $sender
+        );
     }
 
     public function toArray(): array

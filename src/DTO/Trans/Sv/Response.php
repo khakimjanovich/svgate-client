@@ -4,39 +4,28 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Trans\Sv;
 
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
+use Khakimjanovich\SVGate\Validation\Attributes\ArrayOf;
+use Khakimjanovich\SVGate\Validation\AttributeValidator;
 
-final readonly class Response
+final readonly class Response implements DTOFactory
 {
     /** @var list<TransactionInfo> */
     public array $transactions;
 
     /** @param list<TransactionInfo> $transactions */
-    public function __construct(array $transactions)
-    {
+    public function __construct(
+        #[ArrayOf(TransactionInfo::class)]
+        array $transactions
+    ) {
         $this->transactions = $transactions;
     }
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
-        $transactions = [];
-        foreach ($data as $item) {
-            if (! is_array($item)) {
-                throw new ResponseException(
-                    'Invalid trans.sv response item shape.',
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
-                );
-            }
+    public static function from(array $data): static
+    {
+        $mapped = AttributeValidator::normalize(self::class, ['transactions' => $data], ResponseException::class);
 
-            $transactions[] = TransactionInfo::fromArray($item, $rpcId, $httpStatus, $rawResponse);
-        }
-
-        return new self($transactions);
+        return new self($mapped['transactions']);
     }
 }

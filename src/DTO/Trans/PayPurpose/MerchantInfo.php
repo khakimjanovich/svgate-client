@@ -4,36 +4,45 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Trans\PayPurpose;
 
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ValidationException;
+use Khakimjanovich\SVGate\Validation\Attributes\Length;
+use Khakimjanovich\SVGate\Validation\Attributes\PositiveInt;
+use Khakimjanovich\SVGate\Validation\AttributeValidator;
 
-final readonly class MerchantInfo
+final readonly class MerchantInfo implements DTOFactory
 {
     public function __construct(
+        #[Length(min: 1, max: 4)]
         public string $mcc,
+        #[Length(min: 1, max: 80)]
         public string $legalName,
+        #[PositiveInt]
         public int $legalType,
+        #[Length(min: 1, max: 14)]
         public string $legalId,
+        #[Length(max: 5)]
         public ?string $legalOKED = null
     ) {
-        if ($this->mcc === '' || strlen($this->mcc) > 4) {
-            throw new ValidationException('MCC must be between 1 and 4 characters.');
+        AttributeValidator::validate(self::class, get_defined_vars(), ValidationException::class);
+    }
+
+    public static function from(array $data): static
+    {
+        $required = ['mcc', 'legalName', 'legalType', 'legalId'];
+        foreach ($required as $field) {
+            if (! array_key_exists($field, $data)) {
+                throw new ValidationException('merchantInfo requires '.$field.'.');
+            }
         }
 
-        if ($this->legalName === '' || strlen($this->legalName) > 80) {
-            throw new ValidationException('Legal name must be between 1 and 80 characters.');
-        }
-
-        if ($this->legalType <= 0) {
-            throw new ValidationException('Legal type must be a positive integer.');
-        }
-
-        if ($this->legalId === '' || strlen($this->legalId) > 14) {
-            throw new ValidationException('Legal id must be between 1 and 14 characters.');
-        }
-
-        if ($this->legalOKED !== null && strlen($this->legalOKED) > 5) {
-            throw new ValidationException('Legal OKED must be up to 5 characters.');
-        }
+        return new self(
+            (string) $data['mcc'],
+            (string) $data['legalName'],
+            (int) $data['legalType'],
+            (string) $data['legalId'],
+            $data['legalOKED'] ?? null
+        );
     }
 
     public function toArray(): array

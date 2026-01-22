@@ -18,8 +18,10 @@ final readonly class Bins
      */
     public function list(ListPayload $request): ListResponse
     {
-        $result = $this->caller->call('get.bin.list', $request->toParams());
-
-        return ListResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        return ListResponse::from(
+            $this->caller
+                ->call($request->method(), $request->toParams())
+                ->result
+        );
     }
 }

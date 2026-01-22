@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Cards\NewOTP;
 
+use Khakimjanovich\SVGate\Codes\RPCErrors;
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
 
-final class Response
+final readonly class Response implements DTOFactory
 {
     public function __construct(
         public readonly int $id,
@@ -15,19 +17,17 @@ final class Response
         public readonly bool $verified
     ) {}
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
+    public static function from(array $data): static
+    {
         foreach (['id', 'phoneMask', 'token', 'verified'] as $field) {
             if (! array_key_exists($field, $data)) {
                 throw new ResponseException(
                     'Missing field in cards.new.otp response: '.$field,
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_MISSING_FIELD
                 );
             }
         }

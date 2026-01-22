@@ -4,33 +4,31 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Cards\NewVerify;
 
+use Khakimjanovich\SVGate\Codes\RPCErrors;
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
 
-final class Response
+final readonly class Response implements DTOFactory
 {
     public function __construct(
-        public readonly string $id,
-        public readonly string $username,
-        public readonly string $pan,
-        public readonly int $status,
-        public readonly string $phone,
-        public readonly string $fullName,
-        public readonly int $balance,
-        public readonly bool $sms,
-        public readonly int $pincnt,
-        public readonly string $aacct,
-        public readonly string $par,
-        public readonly string $cardtype,
-        public readonly int $holdAmount,
-        public readonly int $cashbackAmount
+        public string $id,
+        public string $username,
+        public string $pan,
+        public int $status,
+        public string $phone,
+        public string $fullName,
+        public int $balance,
+        public bool $sms,
+        public int $pincnt,
+        public string $aacct,
+        public string $par,
+        public string $cardtype,
+        public int $holdAmount,
+        public int $cashbackAmount
     ) {}
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
+    public static function from(array $data): static
+    {
         $holdAmount = $data['holdAmount'] ?? $data['holdamount'] ?? null;
         $cashbackAmount = $data['cashbackAmount'] ?? $data['cashbackamount'] ?? null;
 
@@ -53,9 +51,11 @@ final class Response
             if (! array_key_exists($field, $data)) {
                 throw new ResponseException(
                     'Missing field in cards.new.verify response: '.$field,
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_MISSING_FIELD
                 );
             }
         }
@@ -63,9 +63,11 @@ final class Response
         if ($holdAmount === null || $cashbackAmount === null) {
             throw new ResponseException(
                 'Missing field in cards.new.verify response: holdAmount/cashbackAmount',
-                $rpcId,
-                $httpStatus,
-                $rawResponse
+                null,
+                null,
+                null,
+                null,
+                RPCErrors::SDK_RESPONSE_MISSING_FIELD
             );
         }
 

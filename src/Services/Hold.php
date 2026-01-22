@@ -6,6 +6,7 @@ namespace Khakimjanovich\SVGate\Services;
 
 use Khakimjanovich\SVGate\DTO\Hold\Create\Payload as CreatePayload;
 use Khakimjanovich\SVGate\DTO\Hold\Create\Response as CreateResponse;
+use Khakimjanovich\SVGate\Exceptions\ResponseException;
 use Khakimjanovich\SVGate\Internal\JsonRpcCaller;
 use Random\RandomException;
 
@@ -18,8 +19,19 @@ final readonly class Hold
      */
     public function create(CreatePayload $request): CreateResponse
     {
-        $result = $this->caller->call('hold.create', $request->toParams());
+        $result = $this->caller->call($request->method(), $request->toParams());
 
-        return CreateResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        try {
+            return CreateResponse::from($result->result);
+        } catch (ResponseException $exception) {
+            throw new ResponseException(
+                $exception->getMessage(),
+                $result->rpcId,
+                $result->httpStatus,
+                $result->rawResponse,
+                $exception,
+                (int) $exception->getCode()
+            );
+        }
     }
 }

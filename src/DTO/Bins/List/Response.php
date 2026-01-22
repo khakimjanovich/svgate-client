@@ -4,39 +4,23 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Bins\List;
 
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
+use Khakimjanovich\SVGate\Validation\Attributes\ArrayOf;
+use Khakimjanovich\SVGate\Validation\AttributeValidator;
 
-final readonly class Response
+final readonly class Response implements DTOFactory
 {
-    /** @var list<BinInfo> */
-    public array $bins;
+    /** @param array<int, BinInfo> $bins */
+    public function __construct(
+        #[ArrayOf(BinInfo::class)]
+        public array $bins
+    ) {}
 
-    /** @param list<BinInfo> $bins */
-    public function __construct(array $bins)
+    public static function from(array $data): static
     {
-        $this->bins = $bins;
-    }
+        $mapped = AttributeValidator::normalize(self::class, ['bins' => $data], ResponseException::class);
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
-        $bins = [];
-        foreach ($data as $item) {
-            if (! is_array($item)) {
-                throw new ResponseException(
-                    'Invalid get.bin.list response item shape.',
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
-                );
-            }
-
-            $bins[] = BinInfo::fromArray($item, $rpcId, $httpStatus, $rawResponse);
-        }
-
-        return new self($bins);
+        return new self($mapped['bins']);
     }
 }

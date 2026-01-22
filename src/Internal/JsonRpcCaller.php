@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Khakimjanovich\SVGate\Internal;
 
 use JsonException;
+use Khakimjanovich\SVGate\Codes\RPCErrors;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
 use Khakimjanovich\SVGate\Exceptions\RPCException;
 use Khakimjanovich\SVGate\Exceptions\TransportException;
@@ -48,7 +49,7 @@ final readonly class JsonRpcCaller
         try {
             $body = json_encode($payload, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            throw new ValidationException('Failed to encode JSON-RPC payload.', 0, $exception);
+            throw new ValidationException('Failed to encode JSON-RPC payload.', $exception);
         }
 
         $this->logger->info('SVGate request created.', [
@@ -85,18 +86,39 @@ final readonly class JsonRpcCaller
         try {
             $decoded = json_decode($rawResponse, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            throw new ResponseException('Invalid JSON-RPC response.', $rpcId, $statusCode, $rawResponse, $exception);
+            throw new ResponseException(
+                'Invalid JSON-RPC response.',
+                $rpcId,
+                $statusCode,
+                $rawResponse,
+                $exception,
+                RPCErrors::SDK_RESPONSE_INVALID_JSON
+            );
         }
 
         if (! is_array($decoded) || ($decoded['jsonrpc'] ?? null) !== '2.0') {
-            throw new ResponseException('Unexpected JSON-RPC envelope.', $rpcId, $statusCode, $rawResponse);
+            throw new ResponseException(
+                'Unexpected JSON-RPC envelope.',
+                $rpcId,
+                $statusCode,
+                $rawResponse,
+                null,
+                RPCErrors::SDK_RESPONSE_INVALID_ENVELOPE
+            );
         }
 
         $responseId = $decoded['id'] ?? null;
         if (array_key_exists('error', $decoded)) {
             $error = $decoded['error'];
             if (! is_array($error) || ! isset($error['code'], $error['message'])) {
-                throw new ResponseException('Malformed JSON-RPC error object.', $responseId, $statusCode, $rawResponse);
+                throw new ResponseException(
+                    'Malformed JSON-RPC error object.',
+                    $responseId,
+                    $statusCode,
+                    $rawResponse,
+                    null,
+                    RPCErrors::SDK_RESPONSE_MALFORMED_ERROR
+                );
             }
 
             $errorCode = (int) $error['code'];
@@ -119,12 +141,26 @@ final readonly class JsonRpcCaller
         }
 
         if (! array_key_exists('result', $decoded)) {
-            throw new ResponseException('JSON-RPC response missing result.', $responseId, $statusCode, $rawResponse);
+            throw new ResponseException(
+                'JSON-RPC response missing result.',
+                $responseId,
+                $statusCode,
+                $rawResponse,
+                null,
+                RPCErrors::SDK_RESPONSE_MISSING_RESULT
+            );
         }
 
         $result = $decoded['result'];
         if (! is_array($result)) {
-            throw new ResponseException('JSON-RPC result has unexpected shape.', $responseId, $statusCode, $rawResponse);
+            throw new ResponseException(
+                'JSON-RPC result has unexpected shape.',
+                $responseId,
+                $statusCode,
+                $rawResponse,
+                null,
+                RPCErrors::SDK_RESPONSE_RESULT_SHAPE
+            );
         }
 
         return new JsonRpcResult($result, $responseId, $statusCode, $rawResponse);

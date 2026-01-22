@@ -4,15 +4,32 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\P2p\Info;
 
+use Khakimjanovich\SVGate\DTO\Contracts\PayloadContract;
 use Khakimjanovich\SVGate\Exceptions\ValidationException;
+use Khakimjanovich\SVGate\Validation\Attributes\Digits;
+use Khakimjanovich\SVGate\Validation\AttributeValidator;
 
-final class Payload
+final readonly class Payload implements PayloadContract
 {
-    public function __construct(public readonly string $hpan)
+    public function __construct(
+        #[Digits(length: 16)]
+        public string $hpan
+    ) {
+        AttributeValidator::validate(self::class, get_defined_vars(), ValidationException::class);
+    }
+
+    public static function from(array $data): static
     {
-        if ($this->hpan === '' || ! ctype_digit($this->hpan) || strlen($this->hpan) !== 16) {
-            throw new ValidationException('HPAN must be a 16-digit string.');
+        if (! array_key_exists('hpan', $data)) {
+            throw new ValidationException('p2p.info payload requires hpan.');
         }
+
+        return new self((string) $data['hpan']);
+    }
+
+    public function method(): string
+    {
+        return 'p2p.info';
     }
 
     public function toParams(): array

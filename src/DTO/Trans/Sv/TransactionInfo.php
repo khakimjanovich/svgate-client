@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Trans\Sv;
 
+use Khakimjanovich\SVGate\Codes\RPCErrors;
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
 
-final class TransactionInfo
+final readonly class TransactionInfo implements DTOFactory
 {
     public function __construct(
         public readonly string $id,
@@ -33,12 +35,8 @@ final class TransactionInfo
         public readonly string $status
     ) {}
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
+    public static function from(array $data): static
+    {
         $required = [
             'id',
             'username',
@@ -65,9 +63,11 @@ final class TransactionInfo
             if (! array_key_exists($field, $data)) {
                 throw new ResponseException(
                     'Missing field in trans.sv response item: '.$field,
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_MISSING_FIELD
                 );
             }
         }
@@ -96,5 +96,29 @@ final class TransactionInfo
             (string) $data['respSV'],
             (string) $data['status']
         );
+    }
+
+    /**
+     * @return list<TransactionInfo>
+     */
+    public static function collect(array $items): array
+    {
+        $transactions = [];
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                throw new ResponseException(
+                    'Invalid trans.sv response item shape.',
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_INVALID_ITEM
+                );
+            }
+
+            $transactions[] = self::from($item);
+        }
+
+        return $transactions;
     }
 }

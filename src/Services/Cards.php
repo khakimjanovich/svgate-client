@@ -10,6 +10,7 @@ use Khakimjanovich\SVGate\DTO\Cards\NewOTP\Payload as NewOtpPayload;
 use Khakimjanovich\SVGate\DTO\Cards\NewOTP\Response as NewOtpResponse;
 use Khakimjanovich\SVGate\DTO\Cards\NewVerify\Payload as NewVerifyPayload;
 use Khakimjanovich\SVGate\DTO\Cards\NewVerify\Response as NewVerifyResponse;
+use Khakimjanovich\SVGate\Exceptions\ResponseException;
 use Khakimjanovich\SVGate\Internal\JsonRpcCaller;
 use Random\RandomException;
 
@@ -22,9 +23,20 @@ final readonly class Cards
      */
     public function newOtp(NewOtpPayload $request): NewOtpResponse
     {
-        $result = $this->caller->call('cards.new.otp', $request->toParams());
+        $result = $this->caller->call($request->method(), $request->toParams());
 
-        return NewOtpResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        try {
+            return NewOtpResponse::from($result->result);
+        } catch (ResponseException $exception) {
+            throw new ResponseException(
+                $exception->getMessage(),
+                $result->rpcId,
+                $result->httpStatus,
+                $result->rawResponse,
+                $exception,
+                (int) $exception->getCode()
+            );
+        }
     }
 
     /**
@@ -32,9 +44,11 @@ final readonly class Cards
      */
     public function newVerify(NewVerifyPayload $request): NewVerifyResponse
     {
-        $result = $this->caller->call('cards.new.verify', $request->toParams());
-
-        return NewVerifyResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        return NewVerifyResponse::from(
+            $this->caller
+                ->call($request->method(), $request->toParams())
+                ->result
+        );
     }
 
     /**
@@ -42,8 +56,10 @@ final readonly class Cards
      */
     public function get(GetPayload $request): GetResponse
     {
-        $result = $this->caller->call('cards.get', $request->toParams());
-
-        return GetResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        return GetResponse::from(
+            $this->caller
+                ->call($request->method(), $request->toParams())
+                ->result
+        );
     }
 }

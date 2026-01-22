@@ -8,6 +8,7 @@ use Khakimjanovich\SVGate\DTO\Trans\PayPurpose\Payload as PayPurposePayload;
 use Khakimjanovich\SVGate\DTO\Trans\PayPurpose\Response as PayPurposeResponse;
 use Khakimjanovich\SVGate\DTO\Trans\Sv\Payload as SvPayload;
 use Khakimjanovich\SVGate\DTO\Trans\Sv\Response as SvResponse;
+use Khakimjanovich\SVGate\Exceptions\ResponseException;
 use Khakimjanovich\SVGate\Internal\JsonRpcCaller;
 use Random\RandomException;
 
@@ -20,9 +21,20 @@ final readonly class Trans
      */
     public function payPurpose(PayPurposePayload $request): PayPurposeResponse
     {
-        $result = $this->caller->call('trans.pay.purpose', $request->toParams());
+        $result = $this->caller->call($request->method(), $request->toParams());
 
-        return PayPurposeResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        try {
+            return PayPurposeResponse::from($result->result);
+        } catch (ResponseException $exception) {
+            throw new ResponseException(
+                $exception->getMessage(),
+                $result->rpcId,
+                $result->httpStatus,
+                $result->rawResponse,
+                $exception,
+                (int) $exception->getCode()
+            );
+        }
     }
 
     /**
@@ -30,8 +42,19 @@ final readonly class Trans
      */
     public function sv(SvPayload $request): SvResponse
     {
-        $result = $this->caller->call('trans.sv', $request->toParams());
+        $result = $this->caller->call($request->method(), $request->toParams());
 
-        return SvResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        try {
+            return SvResponse::from($result->result);
+        } catch (ResponseException $exception) {
+            throw new ResponseException(
+                $exception->getMessage(),
+                $result->rpcId,
+                $result->httpStatus,
+                $result->rawResponse,
+                $exception,
+                (int) $exception->getCode()
+            );
+        }
     }
 }

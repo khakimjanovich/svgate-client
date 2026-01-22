@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Khakimjanovich\SVGate\DTO\Terminals\Get;
 
+use Khakimjanovich\SVGate\Codes\RPCErrors;
+use Khakimjanovich\SVGate\DTO\Contracts\DTOFactory;
 use Khakimjanovich\SVGate\Exceptions\ResponseException;
 
-final class TerminalInfo
+final readonly class TerminalInfo implements DTOFactory
 {
     public function __construct(
         public readonly int $pid,
@@ -20,12 +22,8 @@ final class TerminalInfo
         public readonly string $purpose
     ) {}
 
-    public static function fromArray(
-        array $data,
-        int|string|null $rpcId = null,
-        ?int $httpStatus = null,
-        ?string $rawResponse = null
-    ): self {
+    public static function from(array $data): static
+    {
         $terminalType = $data['terminalType'] ?? $data['terminal_type'] ?? $data['t_type'] ?? null;
 
         $required = ['pid', 'terminalId', 'merchantId', 'username', 'instId', 'name', 'port', 'purpose'];
@@ -33,9 +31,11 @@ final class TerminalInfo
             if (! array_key_exists($field, $data)) {
                 throw new ResponseException(
                     'Missing field in terminal.get response item: '.$field,
-                    $rpcId,
-                    $httpStatus,
-                    $rawResponse
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_MISSING_FIELD
                 );
             }
         }
@@ -43,9 +43,11 @@ final class TerminalInfo
         if ($terminalType === null) {
             throw new ResponseException(
                 'Missing field in terminal.get response item: terminalType',
-                $rpcId,
-                $httpStatus,
-                $rawResponse
+                null,
+                null,
+                null,
+                null,
+                RPCErrors::SDK_RESPONSE_MISSING_FIELD
             );
         }
 
@@ -60,5 +62,29 @@ final class TerminalInfo
             (int) $data['port'],
             (string) $data['purpose']
         );
+    }
+
+    /**
+     * @return list<TerminalInfo>
+     */
+    public static function collect(array $items): array
+    {
+        $terminals = [];
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                throw new ResponseException(
+                    'Invalid terminal.get response item shape.',
+                    null,
+                    null,
+                    null,
+                    null,
+                    RPCErrors::SDK_RESPONSE_INVALID_ITEM
+                );
+            }
+
+            $terminals[] = self::from($item);
+        }
+
+        return $terminals;
     }
 }

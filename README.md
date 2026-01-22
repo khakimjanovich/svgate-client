@@ -95,8 +95,10 @@ A PSR-3 logger is required and is used for request creation, response receipt, a
 - `src/Services` — public service modules grouped by domain (Cards, Bins, Terminals, P2p, Trans, Hold).
 - `src` — main SDK client entry point (`SVGate.php`).
 - `src/DTO` — immutable endpoint DTOs grouped by method; Payload and Response types per endpoint.
+- `src/DTO/Contracts` — shared DTO construction contracts (`DTOFactory`, `PayloadContract`).
 - `src/Exceptions` — typed SDK exceptions.
 - `src/Internal` — internal JSON-RPC caller and redaction helpers.
+- `src/Validation` — attribute-based DTO validation rules and validator.
 - `tests` — unit tests and fake transport.
 
 ## Testing
@@ -104,7 +106,11 @@ A PSR-3 logger is required and is used for request creation, response receipt, a
 ```bash
 composer install
 composer test
+composer test-coverage
 ```
+
+Tests are written in Pest and run via the `composer test` script.
+Coverage requires an installed driver (Xdebug or PCOV). `composer test-coverage` enforces 95% per-class coverage.
 
 ## Formatting
 

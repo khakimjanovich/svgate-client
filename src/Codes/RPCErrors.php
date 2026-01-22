@@ -332,6 +332,26 @@ final class RPCErrors
 
     public const int SERVICE_UNAVAILABLE_MAX = -400;
 
+    public const int SDK_VALIDATION = 100000;
+
+    public const int SDK_TRANSPORT = 100001;
+
+    public const int SDK_RESPONSE = 100002;
+
+    public const int SDK_RESPONSE_INVALID_JSON = 100010;
+
+    public const int SDK_RESPONSE_INVALID_ENVELOPE = 100011;
+
+    public const int SDK_RESPONSE_MALFORMED_ERROR = 100012;
+
+    public const int SDK_RESPONSE_MISSING_RESULT = 100013;
+
+    public const int SDK_RESPONSE_RESULT_SHAPE = 100014;
+
+    public const int SDK_RESPONSE_MISSING_FIELD = 100020;
+
+    public const int SDK_RESPONSE_INVALID_ITEM = 100021;
+
     private const array MESSAGES = [
         self::CODE_0 => 'The card is added to main cards!',
         self::CODE_NEG_100 => 'Empty parameters!',
@@ -492,6 +512,16 @@ final class RPCErrors
         self::CODE_NEG_393 => 'PINFL not found!',
         self::CODE_NEG_398 => 'Token created for replenishment only!',
         self::CODE_NEG_399 => 'WCard errors!',
+        self::SDK_VALIDATION => 'SDK validation error.',
+        self::SDK_TRANSPORT => 'SDK transport error.',
+        self::SDK_RESPONSE => 'SDK response error.',
+        self::SDK_RESPONSE_INVALID_JSON => 'SDK response invalid JSON.',
+        self::SDK_RESPONSE_INVALID_ENVELOPE => 'SDK response invalid JSON-RPC envelope.',
+        self::SDK_RESPONSE_MALFORMED_ERROR => 'SDK response malformed JSON-RPC error.',
+        self::SDK_RESPONSE_MISSING_RESULT => 'SDK response missing result.',
+        self::SDK_RESPONSE_RESULT_SHAPE => 'SDK response has unexpected result shape.',
+        self::SDK_RESPONSE_MISSING_FIELD => 'SDK response missing required field.',
+        self::SDK_RESPONSE_INVALID_ITEM => 'SDK response item has unexpected shape.',
     ];
 
     public static function message(int $code): ?string

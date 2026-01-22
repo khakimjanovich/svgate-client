@@ -10,6 +10,7 @@ use Khakimjanovich\SVGate\DTO\P2p\Universal\Payload as UniversalPayload;
 use Khakimjanovich\SVGate\DTO\P2p\Universal\Response as UniversalResponse;
 use Khakimjanovich\SVGate\DTO\P2p\UniversalCredit\Payload as UniversalCreditPayload;
 use Khakimjanovich\SVGate\DTO\P2p\UniversalCredit\Response as UniversalCreditResponse;
+use Khakimjanovich\SVGate\Exceptions\ResponseException;
 use Khakimjanovich\SVGate\Internal\JsonRpcCaller;
 use Random\RandomException;
 
@@ -22,9 +23,20 @@ final readonly class P2p
      */
     public function info(InfoPayload $request): InfoResponse
     {
-        $result = $this->caller->call('p2p.info', $request->toParams());
+        $result = $this->caller->call($request->method(), $request->toParams());
 
-        return InfoResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        try {
+            return InfoResponse::from($result->result);
+        } catch (ResponseException $exception) {
+            throw new ResponseException(
+                $exception->getMessage(),
+                $result->rpcId,
+                $result->httpStatus,
+                $result->rawResponse,
+                $exception,
+                (int) $exception->getCode()
+            );
+        }
     }
 
     /**
@@ -32,9 +44,20 @@ final readonly class P2p
      */
     public function universal(UniversalPayload $request): UniversalResponse
     {
-        $result = $this->caller->call('p2p.universal', $request->toParams());
+        $result = $this->caller->call($request->method(), $request->toParams());
 
-        return UniversalResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        try {
+            return UniversalResponse::from($result->result);
+        } catch (ResponseException $exception) {
+            throw new ResponseException(
+                $exception->getMessage(),
+                $result->rpcId,
+                $result->httpStatus,
+                $result->rawResponse,
+                $exception,
+                (int) $exception->getCode()
+            );
+        }
     }
 
     /**
@@ -42,8 +65,19 @@ final readonly class P2p
      */
     public function universalCredit(UniversalCreditPayload $request): UniversalCreditResponse
     {
-        $result = $this->caller->call('p2p.universal.credit', $request->toParams());
+        $result = $this->caller->call($request->method(), $request->toParams());
 
-        return UniversalCreditResponse::fromArray($result->result, $result->rpcId, $result->httpStatus, $result->rawResponse);
+        try {
+            return UniversalCreditResponse::from($result->result);
+        } catch (ResponseException $exception) {
+            throw new ResponseException(
+                $exception->getMessage(),
+                $result->rpcId,
+                $result->httpStatus,
+                $result->rawResponse,
+                $exception,
+                (int) $exception->getCode()
+            );
+        }
     }
 }
